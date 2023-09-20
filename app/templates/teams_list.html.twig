@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+    <div class="p-3 pb-md-4 mx-auto text-center">
+        <h1 class="display-4 fw-normal text-body-emphasis">Команды</h1>
+        {% for key, team in teams %}
+            <div class="row justify-content-center">
+                <div class="col">
+                    {{ team.getId() }}
+                </div>
+                <div class="col">
+                    {{ team.getName() }}
+                </div>
+                <div class="col">
+                    {{ team.getCreatedAt() }}
+                </div>
+                <div class="col">
+                    <button type="button" class="btn-sm-danger js-remove-team-btn" data-team-id="{{ team.getId() }}">Удалить</button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="p-3 pb-md-4 mx-auto text-center">
+        <h1 class="display-4 fw-normal text-body-emphasis">Создать команду</h1>
+        <form id="create-team" action="">
+            <div class="row">
+                <label for="name">Имя</label>
+                <input type="text" name="name"/>
+            </div>
+            <div class="row">
+                <button type="submit" class="btn-danger">Создать</button>
+            </div>
+        </form>
+    </div>
+    <script>
+        $(document).on('DOMContentLoaded', (e) => {
+            const removeTeamBtns = document.getElementsByClassName('js-remove-team-btn');
+            Array.from(removeTeamBtns).forEach((val) => {
+                val.addEventListener('click', removeTeamBtnHandler);
+            })
+            $('#create-team').on('submit', (e) => {
+                e.preventDefault();
+                const formSerialized = $("#create-team").serializeArray();
+                const formData = {
+                    teamNames: []
+                };
+                formSerialized.forEach((val) => {
+                    formData[`${val.name}`] = val.value;
+                });
+                $.ajax('http://tournaments.loc/team', {
+                    type: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify(formData),
+                    success: function (response) {
+                        document.location.reload();
+                    },
+                    error: function (error) {
+                        alert(error.responseJSON.message);
+                    }
+                })
+            })
+        });
+
+        function removeTeamBtnHandler(e) {
+            const teamId = $(this).data('team-id');
+            if (!teamId) {
+                return;
+            }
+            $.ajax('http://tournaments.loc/team/' + teamId, {
+                type: 'DELETE',
+                success: function (data) {
+                    console.log(data);
+                    document.location.reload();
+                },
+                error: function (error) {
+                    alert(error.responseJSON.message);
+                }
+            })
+        }
+    </script>
+{% endblock %}

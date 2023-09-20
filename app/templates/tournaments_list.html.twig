@@ -1,0 +1,118 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+    <div class="row">
+        <div class="p-3 pb-md-4 mx-auto text-center">
+            <h1 class="display-4 fw-normal text-body-emphasis">Турниры</h1>
+            <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
+                {% for tournament in tournaments %}
+                    <div class="col">
+                        <div class="card mb-4 rounded-3 shadow-sm">
+                            <div class="card-header py-3">
+                                <h4 class="my-0 fw-normal"><p class="bold">Название турнира:</p>{{ tournament.title }}
+                                </h4>
+                                <h4 class="my-0 fw-normal"><p class="bold">Дата
+                                        турнира:</p>{{ tournament.firstMeetingDate }} - {{ tournament.lastMeetingDate }}
+                                </h4>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-primary"
+                                        onclick="document.location.href='http://tournaments.loc/tournament/{{ tournament.title }}'">
+                                    Открыть
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="p-3 pb-md-4 mx-auto text-center">
+            <h1 class="display-4 fw-normal text-body-emphasis">Создать турнир</h1>
+            <div class="row row-cols-1 row-cols-md-1 mb-3 text-center">
+                <div class="col">
+                    <div class="card mb-4 rounded-3 shadow-sm">
+                        <div class="card-header py-3">
+                            <form id="create-tournament-form" action="">
+                                <div class="row">
+                                    <label for="title">
+                                        Название турнира
+                                    </label>
+                                    <input id="title" name="title" type="text"/>
+                                </div>
+                                <div class="row">
+                                    <label for="teams-select">
+                                        Команды
+                                    </label>
+                                    <div class="col">
+                                        <select id="teams-select" class="selectpicker" multiple name="teams">
+                                            {% for team in teams %}
+                                                <option value="{{ team.name }}">{{ team.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col">
+                                    <label for="date" class="col-form-label">Дата начала турнира</label>
+                                    </div>
+                                    <div class="col">
+                                    <div class="input-group date" id="datepicker">
+                                        <input type="text" name="startsAt" class="form-control">
+                                        <span class="input-group-append">
+                        <span class="input-group-text bg-white d-block">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+                    </span>
+                                    </div>
+                                </div>
+                                </div>
+                                <div class="row">
+                                    <button type="submit" class="btn btn-danger">Создать</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(document).on('DOMContentLoaded', () => {
+            $('#datepicker').datepicker({
+                dateFormat: 'mm/dd/yyyy'
+            });
+            $('#create-tournament-form').on('submit', (e) => {
+                e.preventDefault();
+                const formSerialized = $("#create-tournament-form").serializeArray();
+                const formData = {
+                    teamNames: []
+                };
+                formSerialized.forEach((val) => {
+                    if (val.value == '') {
+                        return;
+                    }
+
+                    if (val.name === 'teams') {
+                        formData.teamNames.push(val.value);
+                    } else {
+                        formData[`${val.name}`] = val.value;
+                    }
+                });
+                console.log(formData);
+                $.ajax('http://tournaments.loc/tournament', {
+                    type: 'POST',
+                    data: JSON.stringify(formData),
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    success: function (response) {
+                        document.location.reload();
+                    },
+                    error: function (error) {
+                        alert(error.responseJSON.message);
+                    }
+                });
+            });
+        })
+    </script>
+{% endblock %}
